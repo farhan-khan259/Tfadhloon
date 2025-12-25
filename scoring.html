@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spyfall - Game Results</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <link href="custom/custom.css" rel="stylesheet" type="text/css" />
+    <style>
+      body {
+        padding: 20px;
+        background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+        font-family: "Segoe UI", sans-serif;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        transition: background-image 1s ease-in-out;
+      }
+
+      .game-container {
+        max-width: 700px;
+        margin: auto;
+        padding: 30px 20px;
+        border-radius: 15px;
+        animation: fadeIn 1s ease forwards;
+      }
+
+      h2 {
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .result-box {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: slideUp 1s ease forwards;
+        animation-delay: 0.5s;
+      }
+
+      .win {
+        background-color: #43d34a;
+        color: white;
+        border: 1px solid #9de59d;
+      }
+
+      .lose {
+        background-color: #fde2e2;
+        color: #7b1c1c;
+        border: 1px solid #f5bebe;
+      }
+
+      .spy-info,
+      .scores-title,
+      .locations-title {
+        font-weight: 600;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        color: #444;
+        opacity: 0;
+        animation: fadeIn 1.2s ease forwards;
+        animation-delay: 1s;
+      }
+
+      .list-group-item {
+        animation: fadeIn 1s ease forwards;
+        animation-delay: 1.2s;
+        opacity: 0;
+      }
+
+      .btn-primary {
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-weight: 500;
+        transition: background 0.3s ease, transform 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        background-color: #0d6efd;
+        transform: translateY(-2px);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .ad-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 0;
+        /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .ad-content {
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .ad-text {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .ad-banner {
+          height: 50px;
+        }
+
+        .ad-content {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const backgrounds = [
+          "gallary/picture/1.PNG",
+          "gallary/picture/2.PNG",
+          "gallary/picture/3.PNG",
+          "gallary/picture/4.PNG",
+          "gallary/picture/5.PNG",
+          "gallary/picture/6.PNG",
+          "gallary/picture/7.PNG",
+          "gallary/picture/8.PNG",
+          "gallary/picture/9.PNG",
+          "gallary/picture/10.PNG",
+          "gallary/picture/11.PNG",
+          "gallary/picture/12.PNG",
+          "gallary/picture/13.PNG",
+          "gallary/picture/14.PNG",
+          "gallary/picture/15.PNG",
+          "gallary/picture/16.PNG",
+          "gallary/picture/17.PNG",
+          "gallary/picture/18.PNG",
+        ];
+
+        const selectedBg =
+          backgrounds[Math.floor(Math.random() * backgrounds.length)];
+        document.body.style.backgroundImage = `url('${selectedBg}')`;
+      });
+    </script>
+    <div class="ad-banner">
+      <div class="ad-content">
+        <span class="ad-text"></span>
+      </div>
+    </div>
+    <div class="game-container text-center" style="margin-top: 70px">
+      <h2>نتائج</h2>
+      <div class="metro-0">
+        <h5 class="scores-title">🏅 نتائج اللاعبين</h5>
+        <img
+          src="gallary/d39efcec86aa7ccd39911144434a880bdb183cc8.png"
+          class="img-fluid"
+          alt="img"
+        />
+      </div>
+      <div id="result" class="result-box"></div>
+      <div id="spyNameBox" style="display: none" class="spy-info"></div>
+      <ul id="scoresList" class="list-group list-group-flush mb-3"></ul>
+      <h5 class="locations-title" style="display: none">
+        📍 Locations Chosen by Spy
+      </h5>
+      <ul id="locationsList" class="list-group list-group-flush mb-4"></ul>
+      <a href="index.html" class="btn btn-primary">ابدأ لعبة جديدة </a>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAXUdqcAfldO1YuxlKDWCh7EYo2nO4AMog",
+        authDomain: "spyfall-fb59a.firebaseapp.com",
+        projectId: "spyfall-fb59a",
+        storageBucket: "spyfall-fb59a.firebasestorage.app",
+        messagingSenderId: "125069847545",
+        appId: "1:125069847545:web:faa43c6e58db9df7242b28",
+        measurementId: "G-MFV3SETE0D",
+        databaseURL: "https://spyfall-fb59a-default-rtdb.firebaseio.com",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      let currentAds = [];
+      let currentAdIndex = 0;
+
+      function loadAdsFromFirebase() {
+        database.ref("admin/ads").on("value", (snapshot) => {
+          const adsData = snapshot.val() || {};
+          currentAds = Object.values(adsData).filter(
+            (ad) => ad.status === "active"
+          );
+          console.log(
+            "Loaded active ads from Firebase (real-time):",
+            currentAds.length
+          );
+
+          if (currentAds.length === 0) {
+            currentAds = [
+              {
+                title: "Default Ad",
+                content: "",
+                url: "",
+              },
+            ];
+          }
+
+          initializeAdRotation();
+        });
+      }
+
+      function initializeAdRotation() {
+        if (currentAds.length > 0) {
+          updateAdBanner();
+          if (currentAds.length > 1) {
+            setInterval(() => {
+              currentAdIndex = (currentAdIndex + 1) % currentAds.length;
+              updateAdBanner();
+            }, 30000);
+          }
+        }
+      }
+
+      function updateAdBanner() {
+        const adText = document.querySelector(".ad-text");
+        if (currentAds.length > 0) {
+          const currentAd = currentAds[currentAdIndex];
+          adText.textContent = currentAd.content;
+        }
+      }
+
+      loadAdsFromFirebase();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessCode = urlParams.get("code") || "N/A";
+      const gameRef = database.ref("games/" + accessCode);
+
+      const resultDiv = document.getElementById("result");
+      const spyNameBox = document.getElementById("spyNameBox");
+      const locationsList = document.getElementById("locationsList");
+      const scoresList = document.getElementById("scoresList");
+
+      gameRef
+        .once("value")
+        .then((snapshot) => {
+          const data = snapshot.val();
+
+          if (!data) {
+            resultDiv.className = "result-box lose";
+            resultDiv.innerHTML = "<p>❌ Game data not found.</p>";
+            return;
+          }
+
+          spyNameBox.style.display = "none";
+          document.querySelector(".locations-title").style.display = "none";
+
+          const points = data.points || {};
+          const playerNames = Object.keys(points);
+
+          if (playerNames.length > 0) {
+            playerNames.sort((a, b) => points[b] - points[a]);
+            playerNames.forEach((name) => {
+              const li = document.createElement("li");
+              li.className = "list-group-item d-flex justify-content-between";
+              li.textContent = name;
+              const span = document.createElement("span");
+              span.className = "badge bg-primary rounded-pill";
+              span.textContent = `${points[name]} pts`;
+              li.appendChild(span);
+              scoresList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement("li");
+            li.className = "list-group-item text-center";
+            li.textContent = "No scores recorded";
+            scoresList.appendChild(li);
+          }
+
+          if (data.winner) {
+            if (data.winner.startsWith("Tie:")) {
+              resultDiv.className = "result-box";
+              resultDiv.innerHTML = `<h4>🤝 ${data.winner}!</h4>`;
+            } else if (data.winner === "No Winner") {
+              resultDiv.className = "result-box";
+              resultDiv.innerHTML = `<h4>🎮 Game Completed!</h4><p>No points were scored.</p>`;
+            } else {
+              resultDiv.className = "result-box win";
+              resultDiv.innerHTML = `<h4>🏆 Winner: ${data.winner}!</h4>`;
+            }
+          } else {
+            resultDiv.className = "result-box";
+            resultDiv.innerHTML = `<p>Result pending or undecided.</p>`;
+          }
+        })
+        .catch(() => {
+          resultDiv.className = "result-box lose";
+          resultDiv.innerHTML = "<p>❌ Error fetching game results.</p>";
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  
+
+    <button id="micBtn" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    background-color: #20BB58;
+    color: white;
+    border: 2px solid white;
+    /* Sharp top-left shadow, no blur */
+    box-shadow: -6px -6px 0 rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  ">
+    <i id="micIcon" class="bi bi-mic-mute-fill"></i>
+  </button>
+  
+  <button id="speakerBtn" style="
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    z-index: 999;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    background-color: #20BB58;
+    color: white;
+    border: 2px solid white;
+    box-shadow: -6px -6px 0 rgba(0,0,0,0.8); /* sharp top-left shadow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  ">
+    <i id="speakerIcon" class="bi bi-volume-up-fill"></i>
+  </button>
+  
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="voiceChat.js"></script>
+<script>
+  // Initialize PeerJS on this page
+  const roomId = localStorage.getItem("roomId");
+
+  // Create a new Peer instance (or reuse ID if you want persistent across reloads)
+  const peer = new Peer(); // let voiceChat.js pick this up as window.peer
+
+  peer.on("open", id => {
+    console.log("My Peer ID on this page:", id);
+
+    const roomRef = firebase.database().ref("rooms/" + roomId + "/peers");
+    roomRef.child(id).set(true);
+
+    peer.on("disconnected", () => {
+      roomRef.child(id).remove();
+    });
+
+    // Now start listening for peers and connecting
+    if (window.voiceChatInitialized) {
+      // voiceChat.js should automatically pick up window.localStream and call connections
+    }
+  });
+</script>
+<script src="voiceChat.js"></script>
+  </body>
+</html>

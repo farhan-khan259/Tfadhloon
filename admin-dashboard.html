@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Spyfall Game</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <style>
+      body {
+        background: #f8f9fa;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .sidebar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sidebar-header h3 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .sidebar-menu {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+      }
+
+      .sidebar-menu li {
+        margin: 5px 0;
+      }
+
+      .sidebar-menu a {
+        display: block;
+        padding: 15px 20px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 0 25px 25px 0;
+        margin-right: 20px;
+      }
+
+      .sidebar-menu a:hover,
+      .sidebar-menu a.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .main-content {
+        margin-left: 250px;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .top-bar {
+        background: white;
+        padding: 15px 30px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+      }
+
+      .logout-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+      }
+
+      .dashboard-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        color: #666;
+        font-weight: 500;
+      }
+
+      .content-section {
+        display: none;
+      }
+
+      .content-section.active {
+        display: block;
+      }
+
+      .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .table-container {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .table th {
+        background: #f8f9fa;
+        border: none;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .table td {
+        border: none;
+        vertical-align: middle;
+      }
+
+      .action-btn {
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: none;
+        margin: 0 2px;
+        font-size: 0.9rem;
+      }
+
+      .btn-edit {
+        background: #ffc107;
+        color: #333;
+      }
+
+      .btn-delete {
+        background: #dc3545;
+        color: white;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fas fa-shield-alt"></i> Admin Panel</h3>
+      </div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="#" class="menu-link active" data-section="dashboard"
+            ><i class="fas fa-tachometer-alt"></i> Dashboard</a
+          >
+        </li>
+        <li>
+          <a href="#" class="menu-link" data-section="questions"
+            ><i class="fas fa-question-circle"></i> Questions</a
+          >
+        </li>
+        <li>
+          <a href="#" class="menu-link" data-section="ads"
+            ><i class="fas fa-ad"></i> Advertisements</a
+          >
+        </li>
+        <li>
+          <a href="#" class="menu-link" data-section="sponsored_ads"
+            ><i class="fas fa-star"></i> Sponsored Ads</a
+          >
+        </li>
+        <li>
+          <a href="#" class="menu-link" data-section="games"
+            ><i class="fas fa-gamepad"></i> Active Games</a
+          >
+        </li>
+        <li>
+          <a href="#" class="menu-link" data-section="settings"
+            ><i class="fas fa-cog"></i> Settings</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboard" class="content-section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="color: #667eea">
+              <i class="fas fa-question-circle"></i>
+            </div>
+            <div class="stat-number" id="totalQuestions">0</div>
+            <div class="stat-label">Total Questions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: #28a745">
+              <i class="fas fa-ad"></i>
+            </div>
+            <div class="stat-number" id="totalAds">0</div>
+            <div class="stat-label">Active Ads</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: #ff8c00">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-number" id="totalSponsoredAds">0</div>
+            <div class="stat-label">Active Sponsored Ads</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: #ffc107">
+              <i class="fas fa-gamepad"></i>
+            </div>
+            <div class="stat-number" id="activeGames">0</div>
+            <div class="stat-label">Active Games</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="color: #dc3545">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number" id="totalPlayers">0</div>
+            <div class="stat-label">Total Players</div>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <h3><i class="fas fa-chart-line"></i> Quick Actions</h3>
+          <div class="row mt-4">
+            <div class="col-md-3 mb-3">
+              <button
+                class="btn btn-primary-custom w-100"
+                onclick="showSection('questions')"
+              >
+                <i class="fas fa-plus"></i> Add Question
+              </button>
+            </div>
+            <div class="col-md-3 mb-3">
+              <button
+                class="btn btn-primary-custom w-100"
+                onclick="showSection('ads')"
+              >
+                <i class="fas fa-plus"></i> Add Advertisement
+              </button>
+            </div>
+            <div class="col-md-3 mb-3">
+              <button
+                class="btn btn-primary-custom w-100"
+                onclick="showSection('sponsored_ads')"
+              >
+                <i class="fas fa-plus"></i> Add Sponsored Ad
+              </button>
+            </div>
+            <div class="col-md-3 mb-3">
+              <button
+                class="btn btn-primary-custom w-100"
+                onclick="showSection('games')"
+              >
+                <i class="fas fa-eye"></i> View Games
+              </button>
+            </div>
+            <div class="col-md-3 mb-3">
+              <button
+                class="btn btn-primary-custom w-100"
+                onclick="exportData()"
+              >
+                <i class="fas fa-download"></i> Export Data
+              </button>
+            </div>
+            <div class="col-md-3 mb-3">
+              <button
+                id="cleanupBtn"
+                class="btn btn-primary-custom w-100"
+                style="
+                  background: linear-gradient(135deg, #dc3545 0%, #764ba2 100%);
+                  color: #fff;
+                  border: none;
+                  border-radius: 10px;
+                  font-weight: 600;
+                "
+                onclick="cleanupOldGames()"
+              >
+                <i class="fas fa-broom"></i> <span id="cleanupBtnText"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Questions Section -->
+      <div id="questions" class="content-section">
+        <div class="dashboard-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-question-circle"></i> Manage Questions</h3>
+            <button
+              class="btn btn-primary-custom"
+              onclick="showLanguageSelectionModal()"
+            >
+              <i class="fas fa-plus"></i> Add New Question
+            </button>
+          </div>
+          <h4>English Questions</h4>
+          <div class="table-container mb-4">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Option 1</th>
+                  <th>Option 2</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="englishQuestionsTableBody">
+                <!-- English Questions will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+          <h4>Arabic Questions</h4>
+          <div class="table-container">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Option 1</th>
+                  <th>Option 2</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="arabicQuestionsTableBody">
+                <!-- Arabic Questions will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ads Section -->
+      <div id="ads" class="content-section">
+        <div class="dashboard-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-ad"></i> Manage Advertisements</h3>
+            <button class="btn btn-primary-custom" onclick="showAddAdModal()">
+              <i class="fas fa-plus"></i> Add New Ad
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Content</th>
+                  <th>Image</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adsTableBody">
+                <!-- Ads will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sponsored Ads Section -->
+      <div id="sponsored_ads" class="content-section">
+        <div class="dashboard-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-star"></i> Manage Sponsored Ads</h3>
+            <button
+              class="btn btn-primary-custom"
+              onclick="showAddSponsoredAdModal()"
+            >
+              <i class="fas fa-plus"></i> Add New Sponsored Ad
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Question</th>
+                  <th>Image</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sponsoredAdsTableBody">
+                <!-- Sponsored Ads will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Games Section -->
+      <div id="games" class="content-section">
+        <div class="dashboard-card">
+          <h3><i class="fas fa-gamepad"></i> Active Games</h3>
+          <div class="table-container">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Game Code</th>
+                  <th>Host</th>
+                  <th>Players</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="gamesTableBody">
+                <!-- Games will be loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settings" class="content-section">
+        <div class="dashboard-card">
+          <h3><i class="fas fa-cog"></i> System Settings</h3>
+          <div class="row">
+            <div class="col-md-6">
+              <h5>Game Settings</h5>
+              <div class="mb-3">
+                <label class="form-label">Default Question Limit</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="defaultQuestionLimit"
+                  value="20"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Max Players Per Game</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="maxPlayers"
+                  value="4"
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h5>Ad Settings</h5>
+              <div class="mb-3">
+                <label class="form-label">Ad Rotation Interval (seconds)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="adRotationInterval"
+                  value="30"
+                />
+              </div>
+              <div class="mb-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="enableAds"
+                    checked
+                  />
+                  <label class="form-check-label" for="enableAds">
+                    Enable Advertisements
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary-custom" onclick="saveSettings()">
+            <i class="fas fa-save"></i> Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAXUdqcAfldO1YuxlKDWCh7EYo2nO4AMog",
+        authDomain: "spyfall-fb59a.firebaseapp.com",
+        projectId: "spyfall-fb59a",
+        storageBucket: "spyfall-fb59a.firebasestorage.app",
+        messagingSenderId: "125069847545",
+        appId: "1:125069847545:web:faa43c6e58db9df7242b28",
+        measurementId: "G-MFV3SETE0D",
+        databaseURL: "https://spyfall-fb59a-default-rtdb.firebaseio.com",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      const storage = firebase.storage();
+
+      // Check authentication
+      function checkAuth() {
+        if (sessionStorage.getItem("adminAuthenticated") !== "true") {
+          window.location.href = "admin.html";
+          return false;
+        }
+
+        const loginTime = parseInt(
+          sessionStorage.getItem("adminLoginTime") || "0"
+        );
+        const currentTime = Date.now();
+        const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (currentTime - loginTime > sessionDuration) {
+          logout();
+          return false;
+        }
+
+        return true;
+      }
+
+      // Logout function
+      function logout() {
+        sessionStorage.removeItem("adminAuthenticated");
+        sessionStorage.removeItem("adminLoginTime");
+        window.location.href = "admin.html";
+      }
+
+      // Navigation
+      function showSection(sectionName) {
+        document.querySelectorAll(".content-section").forEach((section) => {
+          section.classList.remove("active");
+        });
+
+        document.querySelectorAll(".menu-link").forEach((link) => {
+          link.classList.remove("active");
+        });
+
+        document.getElementById(sectionName).classList.add("active");
+
+        document
+          .querySelector(`[data-section="${sectionName}"]`)
+          .classList.add("active");
+
+        const titles = {
+          dashboard: "Dashboard",
+          questions: "Manage Questions",
+          ads: "Manage Advertisements",
+          sponsored_ads: "Manage Sponsored Ads",
+          games: "Active Games",
+          settings: "Settings",
+        };
+        document.getElementById("pageTitle").textContent =
+          titles[sectionName] || "Dashboard";
+
+        if (sectionName === "questions") {
+          loadQuestions();
+        } else if (sectionName === "ads") {
+          loadAds();
+        } else if (sectionName === "sponsored_ads") {
+          loadSponsoredAds();
+        } else if (sectionName === "games") {
+          loadGames();
+        } else if (sectionName === "dashboard") {
+          loadDashboardStats();
+        }
+      }
+
+      // Menu click handlers
+      document.querySelectorAll(".menu-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const section = this.getAttribute("data-section");
+          showSection(section);
+        });
+      });
+
+      // Initialize dashboard
+      if (checkAuth()) {
+        loadDashboardStats();
+      }
+
+      // Dashboard stats loading
+      function loadDashboardStats() {
+        // Load questions count (real-time)
+        Promise.all([
+          database.ref("admin/questions/english/simple").once("value"),
+          database.ref("admin/questions/english/sponsored").once("value"),
+          database.ref("admin/questions/arabic/simple").once("value"),
+          database.ref("admin/questions/arabic/sponsored").once("value"),
+        ]).then(
+          ([
+            simpleEngSnap,
+            sponsoredEngSnap,
+            simpleAraSnap,
+            sponsoredAraSnap,
+          ]) => {
+            const simpleEngQuestions = simpleEngSnap.val() || {};
+            const sponsoredEngQuestions = sponsoredEngSnap.val() || {};
+            const simpleAraQuestions = simpleAraSnap.val() || {};
+            const sponsoredAraQuestions = sponsoredAraSnap.val() || {};
+            const totalQuestions =
+              Object.keys(simpleEngQuestions).length +
+              Object.keys(sponsoredEngQuestions).length +
+              Object.keys(simpleAraQuestions).length +
+              Object.keys(sponsoredAraQuestions).length;
+            document.getElementById("totalQuestions").textContent =
+              totalQuestions;
+          }
+        );
+
+        // Load ads count (real-time)
+        database.ref("admin/ads").on("value", (snapshot) => {
+          const ads = snapshot.val() || {};
+          const activeAds = Object.values(ads).filter(
+            (ad) => ad.status === "active"
+          );
+          document.getElementById("totalAds").textContent = activeAds.length;
+        });
+
+        // Load sponsored ads count (real-time)
+        database.ref("admin/sponsored_ads").on("value", (snapshot) => {
+          const sponsoredAds = snapshot.val() || {};
+          const activeSponsoredAds = Object.values(sponsoredAds).filter(
+            (ad) => ad.status === "active"
+          );
+          document.getElementById("totalSponsoredAds").textContent =
+            activeSponsoredAds.length;
+        });
+
+        // Load active games count (real-time)
+        database.ref("games").on("value", (snapshot) => {
+          const games = snapshot.val() || {};
+          const activeGames = Object.values(games).filter(
+            (game) => !game.gameEnded
+          );
+          document.getElementById("activeGames").textContent =
+            activeGames.length;
+
+          let totalPlayers = 0;
+          Object.values(games).forEach((game) => {
+            if (game.players) {
+              totalPlayers += Object.keys(game.players).length;
+            }
+          });
+          document.getElementById("totalPlayers").textContent = totalPlayers;
+        });
+      }
+
+      // Questions Management
+      function showLanguageSelectionModal() {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "languageSelectionModal";
+        modal.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Select Language</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p>Please select the language for the new question:</p>
+                <div class="d-flex justify-content-around">
+                  <button class="btn btn-primary-custom" onclick="showTypeSelectionModal('english')">English</button>
+                  <button class="btn btn-primary-custom" onclick="showTypeSelectionModal('arabic')">Arabic</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      function showTypeSelectionModal(language) {
+        bootstrap.Modal.getInstance(document.querySelector(".modal")).hide();
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "typeSelectionModal";
+        modal.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Select Question Type for ${
+                  language.charAt(0).toUpperCase() + language.slice(1)
+                }</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <p>Please select the type of ${
+                  language.charAt(0).toUpperCase() + language.slice(1)
+                } question:</p>
+                <div class="d-flex justify-content-around">
+                  <button class="btn btn-primary-custom" onclick="showAddQuestionModal('${language}', 'simple')">Simple</button>
+                  <button class="btn btn-primary-custom" onclick="showAddQuestionModal('${language}', 'sponsored')">Sponsored</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      function showAddQuestionModal(language, type) {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "addQuestionModal";
+        modal.innerHTML = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Add New ${
+                  language.charAt(0).toUpperCase() + language.slice(1)
+                } ${type.charAt(0).toUpperCase() + type.slice(1)} Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="addQuestionForm">
+                  <div class="mb-3">
+                    <label class="form-label">Option 1</label>
+                    <input type="text" class="form-control" id="option1" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Option 2</label>
+                    <input type="text" class="form-control" id="option2" required>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom" onclick="addQuestion('${language}', '${type}')">Add Question</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      function addQuestion(language, type) {
+        const option1 = document.getElementById("option1").value;
+        const option2 = document.getElementById("option2").value;
+
+        if (!option1 || !option2) {
+          alert("Please fill in all fields");
+          return;
+        }
+
+        const questionData = {
+          options: [option1, option2],
+          language: language,
+          type: type,
+          createdAt: Date.now(),
+          id: Date.now().toString(),
+        };
+
+        const path = `admin/questions/${language}/${type}`;
+        database
+          .ref(path)
+          .push(questionData)
+          .then(() => {
+            alert("Question added successfully!");
+            bootstrap.Modal.getInstance(
+              document.querySelector(".modal")
+            ).hide();
+            loadQuestions();
+            loadDashboardStats();
+          })
+          .catch((error) => {
+            alert("Error adding question: " + error.message);
+          });
+      }
+
+      function loadQuestions() {
+        const englishTbody = document.getElementById(
+          "englishQuestionsTableBody"
+        );
+        const arabicTbody = document.getElementById("arabicQuestionsTableBody");
+        englishTbody.innerHTML = "";
+        arabicTbody.innerHTML = "";
+
+        Promise.all([
+          database.ref("admin/questions/english/simple").once("value"),
+          database.ref("admin/questions/english/sponsored").once("value"),
+          database.ref("admin/questions/arabic/simple").once("value"),
+          database.ref("admin/questions/arabic/sponsored").once("value"),
+        ]).then(
+          ([
+            simpleEngSnap,
+            sponsoredEngSnap,
+            simpleAraSnap,
+            sponsoredAraSnap,
+          ]) => {
+            const addQuestions = (questions, language, type, tbody) => {
+              Object.entries(questions).forEach(([key, question]) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                <td>${question.id || key}</td>
+                <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                <td>${question.options[0]}</td>
+                <td>${question.options[1]}</td>
+                <td>
+                  <button class="action-btn btn-edit" onclick="editQuestion('${key}', '${language}', '${type}', '${
+                  question.options[0]
+                }', '${question.options[1]}')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="action-btn btn-delete" onclick="deleteQuestion('${key}', '${language}', '${type}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              `;
+                tbody.appendChild(row);
+              });
+            };
+
+            addQuestions(
+              simpleEngSnap.val() || {},
+              "english",
+              "simple",
+              englishTbody
+            );
+            addQuestions(
+              sponsoredEngSnap.val() || {},
+              "english",
+              "sponsored",
+              englishTbody
+            );
+            addQuestions(
+              simpleAraSnap.val() || {},
+              "arabic",
+              "simple",
+              arabicTbody
+            );
+            addQuestions(
+              sponsoredAraSnap.val() || {},
+              "arabic",
+              "sponsored",
+              arabicTbody
+            );
+          }
+        );
+      }
+
+      function editQuestion(
+        key,
+        language,
+        type,
+        currentOption1,
+        currentOption2
+      ) {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "editQuestionModal";
+        modal.innerHTML = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit ${
+                  language.charAt(0).toUpperCase() + language.slice(1)
+                } ${type.charAt(0).toUpperCase() + type.slice(1)} Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="editQuestionForm">
+                  <div class="mb-3">
+                    <label class="form-label">Option 1</label>
+                    <input type="text" class="form-control" id="editOption1" value="${currentOption1}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Option 2</label>
+                    <input type="text" class="form-control" id="editOption2" value="${currentOption2}" required>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom" onclick="updateQuestion('${key}', '${language}', '${type}')">Update Question</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      function updateQuestion(key, language, type) {
+        const option1 = document.getElementById("editOption1").value;
+        const option2 = document.getElementById("editOption2").value;
+
+        if (!option1 || !option2) {
+          alert("Please fill in all fields");
+          return;
+        }
+
+        const questionData = {
+          options: [option1, option2],
+          language: language,
+          type: type,
+          updatedAt: Date.now(),
+        };
+
+        const path = `admin/questions/${language}/${type}`;
+        database
+          .ref(path + "/" + key)
+          .update(questionData)
+          .then(() => {
+            alert("Question updated successfully!");
+            bootstrap.Modal.getInstance(
+              document.querySelector(".modal")
+            ).hide();
+            loadQuestions();
+          })
+          .catch((error) => {
+            alert("Error updating question: " + error.message);
+          });
+      }
+
+      function deleteQuestion(key, language, type) {
+        if (confirm("Are you sure you want to delete this question?")) {
+          const path = `admin/questions/${language}/${type}`;
+          database
+            .ref(path + "/" + key)
+            .remove()
+            .then(() => {
+              alert("Question deleted successfully!");
+              loadQuestions();
+              loadDashboardStats();
+            })
+            .catch((error) => {
+              alert("Error deleting question: " + error.message);
+            });
+        }
+      }
+
+      // Image Upload Handler
+      function uploadImage(fileInputId, targetInputId, modalId) {
+        return new Promise((resolve, reject) => {
+          const fileInput = document.getElementById(fileInputId);
+          if (!fileInput) {
+            reject(new Error("File input not found."));
+            return;
+          }
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) {
+            resolve(""); // Resolve with empty string if no file is selected
+            return;
+          }
+
+          const modal = document.getElementById(modalId);
+          if (!modal) {
+            reject(new Error("Modal not found."));
+            return;
+          }
+
+          const storageRef = storage.ref(`images/${Date.now()}_${file.name}`);
+          const uploadTask = storageRef.put(file);
+
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              const progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log(`Upload is ${progress}% done`);
+            },
+            (error) => {
+              console.error("Upload error:", error);
+              reject(error);
+            },
+            () => {
+              uploadTask.snapshot.ref
+                .getDownloadURL()
+                .then((downloadURL) => {
+                  const targetInput = document.getElementById(targetInputId);
+                  if (targetInput) {
+                    targetInput.value = downloadURL;
+                    resolve(downloadURL);
+                  } else {
+                    reject(new Error("Target input not found."));
+                  }
+                })
+                .catch((error) => {
+                  reject(error);
+                });
+            }
+          );
+        });
+      }
+
+      // Ads Management
+      function showAddAdModal() {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "addAdModal";
+        modal.innerHTML = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Add New Advertisement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="addAdForm">
+                  <div class="mb-3">
+                    <label class="form-label">Ad Title</label>
+                    <input type="text" class="form-control" id="adTitle" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ad Content/Text</label>
+                    <textarea class="form-control" id="adContent" rows="3" required></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ad URL (optional)</label>
+                    <input type="url" class="form-control" id="adUrl" placeholder="https://example.com">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ad Image</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="adImage" placeholder="Choose an image..." readonly>
+                      <input type="file" accept="image/*" style="display:none" id="adImageFile" onchange="uploadImage('adImageFile', 'adImage', 'addAdModal').then(url => console.log('Image URL:', url)).catch(err => alert('Image upload error: ' + err.message))">
+                      <button type="button" class="btn btn-secondary" onclick="document.getElementById('adImageFile').click()">Choose Image</button>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-control" id="adStatus">
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom" onclick="addAd()">Add Advertisement</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      async function addAd() {
+        const title = document.getElementById("adTitle").value;
+        const content = document.getElementById("adContent").value;
+        const url = document.getElementById("adUrl").value;
+        const imageInput = document.getElementById("adImage");
+        const status = document.getElementById("adStatus").value;
+
+        if (!title || !content) {
+          alert("Please fill in title and content fields");
+          return;
+        }
+
+        let image = "";
+        if (imageInput.value) {
+          try {
+            image = await uploadImage("adImageFile", "adImage", "addAdModal");
+          } catch (error) {
+            alert("Error uploading image: " + error.message);
+            return;
+          }
+        }
+
+        const adData = {
+          title: title,
+          content: content,
+          url: url || "",
+          image: image,
+          status: status,
+          createdAt: Date.now(),
+          id: Date.now().toString(),
+        };
+
+        try {
+          await database.ref("admin/ads").push(adData);
+          alert("Advertisement added successfully!");
+          bootstrap.Modal.getInstance(document.querySelector(".modal")).hide();
+          loadAds();
+          loadDashboardStats();
+        } catch (error) {
+          alert("Error adding advertisement: " + error.message);
+        }
+      }
+
+      function loadAds() {
+        database.ref("admin/ads").once("value", (snapshot) => {
+          const ads = snapshot.val() || {};
+          const tbody = document.getElementById("adsTableBody");
+          tbody.innerHTML = "";
+
+          Object.entries(ads).forEach(([key, ad]) => {
+            const row = document.createElement("tr");
+            const statusBadge =
+              ad.status === "active"
+                ? '<span class="badge bg-success">Active</span>'
+                : '<span class="badge bg-secondary">Inactive</span>';
+
+            row.innerHTML = `
+              <td>${ad.id || key}</td>
+              <td>${ad.title}</td>
+              <td>${ad.content.substring(0, 50)}${
+              ad.content.length > 50 ? "..." : ""
+            }</td>
+              <td>${
+                ad.image
+                  ? `<img src="${ad.image}" alt="Ad Image" style="max-width:60px;max-height:40px;object-fit:cover;">`
+                  : ""
+              }</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="action-btn btn-edit" onclick="editAd('${key}', '${
+              ad.title
+            }', '${ad.content}', '${ad.url || ""}', '${ad.status}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn btn-delete" onclick="deleteAd('${key}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+      }
+
+      function editAd(
+        key,
+        currentTitle,
+        currentContent,
+        currentUrl,
+        currentStatus
+      ) {
+        database
+          .ref("admin/ads/" + key)
+          .once("value")
+          .then((snapshot) => {
+            const ad = snapshot.val() || {};
+            const currentImage = ad.image || "";
+            const modal = document.createElement("div");
+            modal.className = "modal fade";
+            modal.id = "editAdModal";
+            modal.innerHTML = `
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Edit Advertisement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="editAdForm">
+                      <div class="mb-3">
+                        <label class="form-label">Ad Title</label>
+                        <input type="text" class="form-control" id="editAdTitle" value="${currentTitle}" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Ad Content/Text</label>
+                        <textarea class="form-control" id="editAdContent" rows="3" required>${currentContent}</textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Ad URL (optional)</label>
+                        <input type="url" class="form-control" id="editAdUrl" value="${currentUrl}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Ad Image</label>
+                        <div class="input-group">
+                          <input type="text" class="form-control" id="editAdImage" value="${currentImage}" placeholder="Choose an image..." readonly>
+                          <input type="file" accept="image/*" style="display:none" id="editAdImageFile" onchange="uploadImage('editAdImageFile', 'editAdImage', 'editAdModal').then(url => console.log('Image URL:', url)).catch(err => alert('Image upload error: ' + err.message))">
+                          <button type="button" class="btn btn-secondary" onclick="document.getElementById('editAdImageFile').click()">Choose Image</button>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" id="editAdStatus">
+                          <option value="active" ${
+                            currentStatus === "active" ? "selected" : ""
+                          }>Active</option>
+                          <option value="inactive" ${
+                            currentStatus === "inactive" ? "selected" : ""
+                          }>Inactive</option>
+                        </select>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="updateAd('${key}')">Update Advertisement</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(modal);
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+
+            modal.addEventListener("hidden.bs.modal", () => {
+              document.body.removeChild(modal);
+            });
+          });
+      }
+
+      async function updateAd(key) {
+        const title = document.getElementById("editAdTitle").value;
+        const content = document.getElementById("editAdContent").value;
+        const url = document.getElementById("editAdUrl").value;
+        const imageInput = document.getElementById("editAdImage");
+        const status = document.getElementById("editAdStatus").value;
+
+        if (!title || !content) {
+          alert("Please fill in title and content fields");
+          return;
+        }
+
+        let image = imageInput ? imageInput.value : "";
+        const fileInput = document.getElementById("editAdImageFile");
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          try {
+            image = await uploadImage(
+              "editAdImageFile",
+              "editAdImage",
+              "editAdModal"
+            );
+          } catch (error) {
+            alert("Error uploading image: " + error.message);
+            return;
+          }
+        }
+
+        const adData = {
+          title: title,
+          content: content,
+          url: url || "",
+          image: image,
+          status: status,
+          updatedAt: Date.now(),
+        };
+
+        try {
+          await database.ref("admin/ads/" + key).update(adData);
+          alert("Advertisement updated successfully!");
+          bootstrap.Modal.getInstance(document.querySelector(".modal")).hide();
+          loadAds();
+          loadDashboardStats();
+        } catch (error) {
+          alert("Error updating advertisement: " + error.message);
+        }
+      }
+
+      function deleteAd(key) {
+        if (confirm("Are you sure you want to delete this advertisement?")) {
+          database
+            .ref("admin/ads/" + key)
+            .remove()
+            .then(() => {
+              alert("Advertisement deleted successfully!");
+              loadAds();
+              loadDashboardStats();
+            })
+            .catch((error) => {
+              alert("Error deleting advertisement: " + error.message);
+            });
+        }
+      }
+
+      // Sponsored Ads Management
+      function showAddSponsoredAdModal() {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "addSponsoredAdModal";
+        modal.innerHTML = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Add New Sponsored Ad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="addSponsoredAdForm">
+                  <div class="mb-3">
+                    <label class="form-label">Ad Title</label>
+                    <input type="text" class="form-control" id="sponsoredAdTitle" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Question Text</label>
+                    <input type="text" class="form-control" id="sponsoredAdQuestion" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ad Image</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="sponsoredAdImage" placeholder="Choose an image..." readonly>
+                      <input type="file" accept="image/*" style="display:none" id="sponsoredAdImageFile" onchange="uploadImage('sponsoredAdImageFile', 'sponsoredAdImage', 'addSponsoredAdModal').then(url => console.log('Image URL:', url)).catch(err => alert('Image upload error: ' + err.message))">
+                      <button type="button" class="btn btn-secondary" onclick="document.getElementById('sponsoredAdImageFile').click()">Choose Image</button>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-control" id="sponsoredAdStatus">
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom" onclick="addSponsoredAd()">Add Sponsored Ad</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      async function addSponsoredAd() {
+        const title = document.getElementById("sponsoredAdTitle").value;
+        const question = document.getElementById("sponsoredAdQuestion").value;
+        const imageInput = document.getElementById("sponsoredAdImage");
+        const status = document.getElementById("sponsoredAdStatus").value;
+
+        if (!title || !question) {
+          alert("Please fill in title and question fields");
+          return;
+        }
+
+        let image = "";
+        if (imageInput.value) {
+          try {
+            image = await uploadImage(
+              "sponsoredAdImageFile",
+              "sponsoredAdImage",
+              "addSponsoredAdModal"
+            );
+          } catch (error) {
+            alert("Error uploading image: " + error.message);
+            return;
+          }
+        }
+
+        const sponsoredAdData = {
+          title: title,
+          question: question,
+          image: image,
+          status: status,
+          createdAt: Date.now(),
+          id: Date.now().toString(),
+        };
+
+        try {
+          await database.ref("admin/sponsored_ads").push(sponsoredAdData);
+          alert("Sponsored Ad added successfully!");
+          bootstrap.Modal.getInstance(document.querySelector(".modal")).hide();
+          loadSponsoredAds();
+          loadDashboardStats();
+        } catch (error) {
+          alert("Error adding sponsored ad: " + error.message);
+        }
+      }
+
+      function loadSponsoredAds() {
+        database.ref("admin/sponsored_ads").once("value", (snapshot) => {
+          const sponsoredAds = snapshot.val() || {};
+          const tbody = document.getElementById("sponsoredAdsTableBody");
+          tbody.innerHTML = "";
+
+          Object.entries(sponsoredAds).forEach(([key, ad]) => {
+            const row = document.createElement("tr");
+            const statusBadge =
+              ad.status === "active"
+                ? '<span class="badge bg-success">Active</span>'
+                : '<span class="badge bg-secondary">Inactive</span>';
+
+            row.innerHTML = `
+              <td>${ad.id || key}</td>
+              <td>${ad.title}</td>
+              <td>${ad.question.substring(0, 50)}${
+              ad.question.length > 50 ? "..." : ""
+            }</td>
+              <td>${
+                ad.image
+                  ? `<img src="${ad.image}" alt="Ad Image" style="max-width:60px;max-height:40px;object-fit:cover;">`
+                  : ""
+              }</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="action-btn btn-edit" onclick="editSponsoredAd('${key}', '${
+              ad.title
+            }', '${ad.question}', '${ad.image || ""}', '${ad.status}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn btn-delete" onclick="deleteSponsoredAd('${key}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+      }
+
+      function editSponsoredAd(
+        key,
+        currentTitle,
+        currentQuestion,
+        currentImage,
+        currentStatus
+      ) {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.id = "editSponsoredAdModal";
+        modal.innerHTML = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Sponsored Ad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="editSponsoredAdForm">
+                  <div class="mb-3">
+                    <label class="form-label">Ad Title</label>
+                    <input type="text" class="form-control" id="editSponsoredAdTitle" value="${currentTitle}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Question Text</label>
+                    <input type="text" class="form-control" id="editSponsoredAdQuestion" value="${currentQuestion}" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ad Image</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="editSponsoredAdImage" value="${currentImage}" placeholder="Choose an image..." readonly>
+                      <input type="file" accept="image/*" style="display:none" id="editSponsoredAdImageFile" onchange="uploadImage('editSponsoredAdImageFile', 'editSponsoredAdImage', 'editSponsoredAdModal').then(url => console.log('Image URL:', url)).catch(err => alert('Image upload error: ' + err.message))">
+                      <button type="button" class="btn btn-secondary" onclick="document.getElementById('editSponsoredAdImageFile').click()">Choose Image</button>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-control" id="editSponsoredAdStatus">
+                      <option value="active" ${
+                        currentStatus === "active" ? "selected" : ""
+                      }>Active</option>
+                      <option value="inactive" ${
+                        currentStatus === "inactive" ? "selected" : ""
+                      }>Inactive</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-custom" onclick="updateSponsoredAd('${key}')">Update Sponsored Ad</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        modal.addEventListener("hidden.bs.modal", () => {
+          document.body.removeChild(modal);
+        });
+      }
+
+      async function updateSponsoredAd(key) {
+        const title = document.getElementById("editSponsoredAdTitle").value;
+        const question = document.getElementById(
+          "editSponsoredAdQuestion"
+        ).value;
+        const imageInput = document.getElementById("editSponsoredAdImage");
+        const status = document.getElementById("editSponsoredAdStatus").value;
+
+        if (!title || !question) {
+          alert("Please fill in title and question fields");
+          return;
+        }
+
+        let image = imageInput ? imageInput.value : "";
+        const fileInput = document.getElementById("editSponsoredAdImageFile");
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          try {
+            image = await uploadImage(
+              "editSponsoredAdImageFile",
+              "editSponsoredAdImage",
+              "editSponsoredAdModal"
+            );
+          } catch (error) {
+            alert("Error uploading image: " + error.message);
+            return;
+          }
+        }
+
+        const sponsoredAdData = {
+          title: title,
+          question: question,
+          image: image,
+          status: status,
+          updatedAt: Date.now(),
+        };
+
+        try {
+          await database
+            .ref("admin/sponsored_ads/" + key)
+            .update(sponsoredAdData);
+          alert("Sponsored Ad updated successfully!");
+          bootstrap.Modal.getInstance(document.querySelector(".modal")).hide();
+          loadSponsoredAds();
+          loadDashboardStats();
+        } catch (error) {
+          alert("Error updating sponsored ad: " + error.message);
+        }
+      }
+
+      function deleteSponsoredAd(key) {
+        if (confirm("Are you sure you want to delete this sponsored ad?")) {
+          database
+            .ref("admin/sponsored_ads/" + key)
+            .remove()
+            .then(() => {
+              alert("Sponsored Ad deleted successfully!");
+              loadSponsoredAds();
+              loadDashboardStats();
+            })
+            .catch((error) => {
+              alert("Error deleting sponsored ad: " + error.message);
+            });
+        }
+      }
+
+      // Games Management
+      function loadGames() {
+        database.ref("games").once("value", (snapshot) => {
+          const games = snapshot.val() || {};
+          const tbody = document.getElementById("gamesTableBody");
+          tbody.innerHTML = "";
+
+          Object.entries(games).forEach(([key, game]) => {
+            const row = document.createElement("tr");
+            const playerCount = game.players
+              ? Object.keys(game.players).length
+              : 0;
+            const status = game.gameEnded
+              ? "Ended"
+              : game.gameStarted
+              ? "In Progress"
+              : "Waiting";
+            const statusClass = game.gameEnded
+              ? "bg-secondary"
+              : game.gameStarted
+              ? "bg-warning"
+              : "bg-success";
+            const createdDate = new Date(game.createdAt || 0).toLocaleString();
+
+            row.innerHTML = `
+              <td>${key}</td>
+              <td>${game.host || "Unknown"}</td>
+              <td>${playerCount}</td>
+              <td><span class="badge ${statusClass}">${status}</span></td>
+              <td>${createdDate}</td>
+              <td>
+                <button class="action-btn btn-delete" onclick="deleteGame('${key}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+      }
+
+      function deleteGame(key) {
+        if (confirm("Are you sure you want to delete this game?")) {
+          database
+            .ref("games/" + key)
+            .remove()
+            .then(() => {
+              alert("Game deleted successfully!");
+              loadGames();
+              loadDashboardStats();
+            })
+            .catch((error) => {
+              alert("Error deleting game: " + error.message);
+            });
+        }
+      }
+
+      // Settings Management
+      function saveSettings() {
+        const defaultQuestionLimit = document.getElementById(
+          "defaultQuestionLimit"
+        ).value;
+        const maxPlayers = document.getElementById("maxPlayers").value;
+        const adRotationInterval =
+          document.getElementById("adRotationInterval").value;
+        const enableAds = document.getElementById("enableAds").checked;
+
+        const settings = {
+          defaultQuestionLimit: parseInt(defaultQuestionLimit),
+          maxPlayers: parseInt(maxPlayers),
+          adRotationInterval: parseInt(adRotationInterval),
+          enableAds: enableAds,
+          updatedAt: Date.now(),
+        };
+
+        database
+          .ref("admin/settings")
+          .set(settings)
+          .then(() => {
+            alert("Settings saved successfully!");
+          })
+          .catch((error) => {
+            alert("Error saving settings: " + error.message);
+          });
+      }
+
+      function exportData() {
+        Promise.all([
+          database.ref("admin/questions").once("value"),
+          database.ref("admin/ads").once("value"),
+          database.ref("admin/sponsored_ads").once("value"),
+          database.ref("games").once("value"),
+        ])
+          .then(([questionsSnap, adsSnap, sponsoredAdsSnap, gamesSnap]) => {
+            const data = {
+              questions: questionsSnap.val() || {},
+              ads: adsSnap.val() || {},
+              sponsored_ads: sponsoredAdsSnap.val() || {},
+              games: gamesSnap.val() || {},
+              exportedAt: new Date().toISOString(),
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+              type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `spyfall-data-${
+              new Date().toISOString().split("T")[0]
+            }.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          })
+          .catch((error) => {
+            alert("Error exporting data: " + error.message);
+          });
+      }
+
+      // Cleanup Old Games logic
+      function cleanupOldGames() {
+        const days = 7; // Games older than 7 days
+        const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+        if (
+          !confirm(
+            `Delete all games ended more than ${days} days ago? This cannot be undone!`
+          )
+        )
+          return;
+        database
+          .ref("games")
+          .once("value")
+          .then((snapshot) => {
+            const games = snapshot.val() || {};
+            const toDelete = [];
+            Object.entries(games).forEach(([key, game]) => {
+              if (game.gameEnded && game.gameEnded < cutoff) {
+                toDelete.push(key);
+              }
+            });
+            if (toDelete.length === 0) {
+              alert("No old games to delete.");
+              return;
+            }
+            let deleted = 0;
+            toDelete.forEach((key) => {
+              database
+                .ref("games/" + key)
+                .remove()
+                .then(() => {
+                  deleted++;
+                  if (deleted === toDelete.length) {
+                    alert(`Deleted ${deleted} old games.`);
+                    loadDashboardStats();
+                  }
+                });
+            });
+          });
+      }
+
+      // Localization for Cleanup Button
+      const cleanupBtnText = {
+        en: "Cleanup Old Games",
+        ar: "تنظيف الألعاب القديمة",
+      };
+
+      function updateCleanupBtnLang() {
+        const lang = localStorage.getItem("lang") || "ar";
+        document.getElementById("cleanupBtnText").textContent =
+          cleanupBtnText[lang] || cleanupBtnText["en"];
+      }
+
+      // Add language switcher if not present
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!document.getElementById("langSwitcher")) {
+          const langContainer = document.createElement("div");
+          langContainer.id = "langSwitcherContainer";
+          langContainer.style =
+            "position: fixed; top: 10px; right: 20px; z-index: 2000; display: flex; align-items: center; gap: 8px;";
+          const langLabel = document.createElement("span");
+          langLabel.id = "langSwitcherLabel";
+          langLabel.style =
+            "font-weight: 600; color: #764ba2; background: #fff; border-radius: 8px; padding: 2px 10px; font-size: 14px; box-shadow: 0 2px 8px rgba(102,126,234,0.08);";
+          langContainer.appendChild(langLabel);
+          const switcher = document.createElement("div");
+          switcher.id = "langSwitcher";
+          switcher.className = "form-select form-select-sm";
+          switcher.style =
+            "width: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 10px; font-weight: 600;";
+          switcher.innerHTML =
+            '<option value="ar">العربية</option><option value="en">English</option>';
+          langContainer.appendChild(switcher);
+          document.body.appendChild(langContainer);
+        }
+        const langSwitcher = document.getElementById("langSwitcher");
+        const langLabel = document.getElementById("langSwitcherLabel");
+        const langLabelText = { en: "Language", ar: "اللغة" };
+        function updateLangLabel() {
+          const lang = localStorage.getItem("lang") || "ar";
+          langLabel.textContent = langLabelText[lang] || langLabelText["en"];
+        }
+        langSwitcher.value = localStorage.getItem("lang") || "ar";
+        updateLangLabel();
+        updateCleanupBtnLang();
+        langSwitcher.addEventListener("change", function () {
+          localStorage.setItem("lang", langSwitcher.value);
+          updateLangLabel();
+          updateCleanupBtnLang();
+        });
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
