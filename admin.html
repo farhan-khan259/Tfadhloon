@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Spyfall Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .admin-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .login-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .back-link {
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.show {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="admin-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <h1 class="login-title">Admin Login</h1>
+        
+        <form id="adminLoginForm">
+            <div class="mb-4">
+                <div class="password-input-container">
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" required>
+                    <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-admin">
+                <span class="login-text">Login to Dashboard</span>
+                <span class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Authenticating...
+                </span>
+            </button>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </form>
+        
+        <div class="back-link">
+            <a href="index.html">
+                <i class="fas fa-arrow-left"></i> Back to Game
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = 'admin492479';
+        
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('adminPassword');
+            const toggleIcon = this;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('adminPassword').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const loginText = document.querySelector('.login-text');
+            const loading = document.querySelector('.loading');
+            
+            // Show loading state
+            loginText.style.display = 'none';
+            loading.classList.add('show');
+            
+            // Simulate authentication delay
+            setTimeout(() => {
+                if (password === ADMIN_PASSWORD) {
+                    // Store admin session
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    sessionStorage.setItem('adminLoginTime', Date.now().toString());
+                    
+                    // Redirect to admin dashboard
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    // Show error
+                    errorMessage.textContent = 'Invalid password. Please try again.';
+                    errorMessage.style.display = 'block';
+                    
+                    // Reset form
+                    loginText.style.display = 'inline';
+                    loading.classList.remove('show');
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('adminPassword').focus();
+                }
+            }, 1000);
+        });
+
+        // Check if already authenticated
+        if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+            const loginTime = parseInt(sessionStorage.getItem('adminLoginTime') || '0');
+            const currentTime = Date.now();
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (currentTime - loginTime < sessionDuration) {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                // Session expired
+                sessionStorage.removeItem('adminAuthenticated');
+                sessionStorage.removeItem('adminLoginTime');
+            }
+        }
+
+        // Auto-focus password input
+        document.getElementById('adminPassword').focus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'AbdoMaster';
+    src: url('AbdoMaster-Black.woff2') format('woff2'),
+        url('AbdoMaster-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
