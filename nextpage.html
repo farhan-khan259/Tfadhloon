@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spyfall Game - Lobby</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+    <link href="custom/custom.css" rel="stylesheet" type="text/css" />
+    <script src="custom/lang.js"></script>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        transition: background-image 1s ease-in-out;
+      }
+
+      .crown {
+        font-size: 1.2rem;
+        margin-left: 5px;
+      }
+
+      #copyBtn {
+        cursor: pointer;
+        margin-left: 5px;
+      }
+
+      .ad-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .ad-content {
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .ad-text {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .ad-banner {
+          height: 50px;
+        }
+
+        .ad-content {
+          font-size: 14px;
+        }
+      }
+
+      .remove-player-btn {
+        cursor: pointer;
+        margin-left: 30px;
+        font-size: 1rem;
+        color: white;
+        border-radius: 5px;
+        background-color: red;
+        min-width: 30px;
+        height: 30px;
+        border: 2px solid black;
+      }
+
+      .remove-player-btn:hover {
+        color: darkred;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const backgrounds = [
+          "gallary/picture/1.PNG",
+          "gallary/picture/2.PNG",
+          "gallary/picture/3.PNG",
+          "gallary/picture/4.PNG",
+          "gallary/picture/5.PNG",
+          "gallary/picture/6.PNG",
+          "gallary/picture/7.PNG",
+          "gallary/picture/8.PNG",
+          "gallary/picture/9.PNG",
+          "gallary/picture/10.PNG",
+          "gallary/picture/11.PNG",
+          "gallary/picture/12.PNG",
+          "gallary/picture/13.PNG",
+          "gallary/picture/14.PNG",
+          "gallary/picture/15.PNG",
+          "gallary/picture/16.PNG",
+          "gallary/picture/17.PNG",
+          "gallary/picture/18.PNG",
+        ];
+
+        const selectedBg =
+          backgrounds[Math.floor(Math.random() * backgrounds.length)];
+
+        document.body.style.backgroundImage = `url('${selectedBg}')`;
+      });
+    </script>
+    <div class="ad-banner">
+      <div class="ad-content">
+        <span class="ad-text"></span>
+      </div>
+    </div>
+
+    <div class="text-center w-100" style="max-width: 400px; margin-top: 70px">
+      <h3 id="waitingPlayersText"></h3>
+      <hr />
+
+      <p class="mb-1">
+        <strong id="accessCodeLabel"></strong> <span id="accessCode"></span>
+        <i
+          id="copyBtn"
+          class="bi bi-clipboard"
+          title="Copy full URL to clipboard"
+        ></i>
+      </p>
+
+      <hr />
+      <p class="mb-1"><strong id="adminSettingsLabel"></strong></p>
+      <div id="playersContainer" class="mb-3"></div>
+
+      <hr id="hostSettingsHR" style="display: none" />
+      <p id="hostSettingsLabel" class="mb-1" style="display: none"></p>
+
+      <select
+        id="questionLimitSelect"
+        class="form-select mb-2"
+        style="display: none"
+      >
+        <option value="5"></option>
+        <option value="10"></option>
+        <option value="20"></option>
+        <option value="30"></option>
+        <option value="40"></option>
+        <option value="80"></option>
+        <option value="100"></option>
+      </select>
+
+      <button
+        id="startGameBtn"
+        class="btn btn-outline-dark mt-2"
+        style="display: none"
+      ></button>
+
+      <p id="questionLimitDisplay" class="text-primary mt-2"></p>
+      <p id="statusText" class="text-secondary mt-1"></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      function updateLocalizedUI() {
+        document.title = t("lobbyTitle");
+        document.getElementById("waitingPlayersText").textContent =
+          t("waitingPlayers");
+        document.getElementById("accessCodeLabel").textContent =
+          t("accessCodeLabel");
+        document.getElementById("adminSettingsLabel").textContent =
+          t("adminSettings");
+        document.getElementById("hostSettingsLabel").textContent =
+          t("hostSettings");
+        document.getElementById("startGameBtn").textContent = t("startGame");
+        document.getElementById("questionLimitSelect").options[0].text =
+          t("questionLimit5");
+        document.getElementById("questionLimitSelect").options[1].text =
+          t("questionLimit10");
+        document.getElementById("questionLimitSelect").options[2].text =
+          t("questionLimit20");
+        document.getElementById("questionLimitSelect").options[3].text =
+          t("questionLimit30");
+        document.getElementById("questionLimitSelect").options[4].text =
+          t("questionLimit40");
+        document.getElementById("questionLimitSelect").options[5].text =
+          t("questionLimit80");
+        document.getElementById("questionLimitSelect").options[6].text =
+          t("questionLimit100");
+        const adText = document.querySelector(".ad-text");
+        if (adText && currentAds.length === 0) {
+          adText.textContent = t("adHere");
+        }
+        const readyCount = Object.keys(readyPlayers).length;
+        const totalCount = Object.keys(allPlayers).length;
+        document.getElementById("statusText").textContent = t("playersReady", {
+          ready: readyCount,
+          total: totalCount,
+        });
+        const limit = document.getElementById("questionLimitSelect").value || 5;
+        document.getElementById("questionLimitDisplay").textContent = t(
+          "questions",
+          { count: limit }
+        );
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        database
+          .ref("admin/settings/languageCondition")
+          .once("value")
+          .then((snapshot) => {
+            const firebaseLang = snapshot.val();
+            const localLang = localStorage.getItem("lang") || "ar";
+            const selectedLang = firebaseLang || localLang;
+            localStorage.setItem("lang", selectedLang);
+            updateLocalizedUI();
+          })
+          .catch((error) => {
+            console.error("Error loading language from Firebase:", error);
+            const localLang = localStorage.getItem("lang") || "ar";
+            localStorage.setItem("lang", localLang);
+            updateLocalizedUI();
+          });
+      });
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAXUdqcAfldO1YuxlKDWCh7EYo2nO4AMog",
+        authDomain: "spyfall-fb59a.firebaseapp.com",
+        projectId: "spyfall-fb59a",
+        storageBucket: "spyfall-fb59a.firebasestorage.app",
+        messagingSenderId: "125069847545",
+        appId: "1:125069847545:web:faa43c6e58db9df7242b28",
+        measurementId: "G-MFV3SETE0D",
+        databaseURL: "https://spyfall-fb59a-default-rtdb.firebaseio.com",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessCode = urlParams.get("code") || "N/A";
+      document.getElementById("accessCode").textContent = accessCode;
+
+      const gameRef = database.ref("games/" + accessCode);
+      const playersContainer = document.getElementById("playersContainer");
+      const statusText = document.getElementById("statusText");
+      const startGameBtn = document.getElementById("startGameBtn");
+      const questionLimitSelect = document.getElementById(
+        "questionLimitSelect"
+      );
+      const questionLimitDisplay = document.getElementById(
+        "questionLimitDisplay"
+      );
+
+      let currentAds = [];
+      let currentAdIndex = 0;
+
+      function loadAdsFromFirebase() {
+        database.ref("admin/ads").on("value", (snapshot) => {
+          const adsData = snapshot.val() || {};
+          currentAds = Object.values(adsData).filter(
+            (ad) => ad.status === "active"
+          );
+          console.log(
+            "Loaded active ads from Firebase (real-time):",
+            currentAds.length
+          );
+
+          if (currentAds.length === 0) {
+            currentAds = [
+              {
+                title: "Default Ad",
+                content: "",
+                url: "",
+              },
+            ];
+          }
+
+          initializeAdRotation();
+        });
+      }
+
+      function initializeAdRotation() {
+        if (currentAds.length > 0) {
+          updateAdBanner();
+
+          if (currentAds.length > 1) {
+            setInterval(() => {
+              currentAdIndex = (currentAdIndex + 1) % currentAds.length;
+              updateAdBanner();
+            }, 30000);
+          }
+        }
+      }
+
+      function updateAdBanner() {
+        const adText = document.querySelector(".ad-text");
+        const adImg = document.querySelector(".ad-img");
+        if (currentAds.length > 0) {
+          const currentAd = currentAds[currentAdIndex];
+          adText.textContent = currentAd.content;
+          if (currentAd.image && currentAd.image !== "") {
+            adImg.src = currentAd.image;
+            adImg.style.display = "inline-block";
+          } else {
+            adImg.style.display = "none";
+          }
+        } else if (adText) {
+          adText.textContent = t("adHere");
+          adImg.style.display = "none";
+        }
+      }
+
+      loadAdsFromFirebase();
+
+      let allPlayers = {};
+      let hostName = null;
+      let savedPlayerName = null;
+      let readyPlayers = {};
+
+      // Fetch maxPlayers from Firebase
+      async function getMaxPlayers() {
+        try {
+          const snapshot = await database.ref("admin/settings/maxplayers").once("value");
+          const maxPlayers = snapshot.val() || 101; // Default to 101 if not set
+          console.log("Max players fetched from Firebase:", maxPlayers);
+          return maxPlayers;
+        } catch (error) {
+          console.error("Error fetching maxplayers:", error);
+          return 101; // Fallback to 101
+        }
+      }
+
+      gameRef
+        .once("value")
+        .then(async (snapshot) => {
+          if (!snapshot.exists()) {
+            alert(t("gameNotFoundError") || "Game not found.");
+            localStorage.removeItem("playerName");
+            localStorage.removeItem("gameCode");
+            window.location.href = "index.html";
+            return;
+          }
+
+          const gameData = snapshot.val();
+          hostName = gameData.host || "";
+          savedPlayerName = localStorage.getItem("playerName");
+
+          if (!savedPlayerName) {
+            await askForName(gameData.players || {});
+            return;
+          }
+
+          if (gameData.players && gameData.players[savedPlayerName]) {
+            initializeLobby(savedPlayerName);
+          } else {
+            await tryAddPlayer(savedPlayerName, gameData.players || {});
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          alert(t("accessGameError") || "Error accessing game.");
+          localStorage.removeItem("playerName");
+          localStorage.removeItem("gameCode");
+          window.location.href = "index.html";
+        });
+
+      async function tryAddPlayer(name, players) {
+        const maxPlayers = await getMaxPlayers();
+        if (Object.keys(players).length >= maxPlayers) {
+          alert(t("gameFullError") || `This game is full with ${maxPlayers} players.`);
+          localStorage.removeItem("playerName");
+          localStorage.removeItem("gameCode");
+          window.location.href = "index.html";
+          return;
+        }
+
+        if (players[name]) {
+          initializeLobby(name);
+        } else {
+          const result = await database.ref("games/" + accessCode).transaction((gameData) => {
+            if (gameData) {
+              gameData.players = gameData.players || {};
+              gameData.players[name] = true;
+              gameData.playerOrder = gameData.playerOrder || [];
+              if (!gameData.playerOrder.includes(name)) {
+                gameData.playerOrder.push(name);
+              }
+              return gameData;
+            }
+          });
+
+          if (result.committed) {
+            localStorage.setItem("playerName", name);
+            initializeLobby(name);
+          } else {
+            alert(t("joinGameError") || "Failed to join game.");
+            localStorage.removeItem("playerName");
+            localStorage.removeItem("gameCode");
+            window.location.href = "index.html";
+          }
+        }
+      }
+
+      async function askForName(players) {
+        const maxPlayers = await getMaxPlayers();
+        const enteredName = prompt(
+          t("enterNamePrompt") || "Enter your player name:"
+        );
+        if (!enteredName || enteredName.trim() === "") {
+          alert(t("nameRequiredError") || "Name cannot be empty.");
+          localStorage.removeItem("playerName");
+          localStorage.removeItem("gameCode");
+          window.location.href = "index.html";
+          return;
+        }
+
+        let trimmedName = enteredName.trim();
+
+        if (players[trimmedName]) {
+          const newName = prompt(
+            t("nameTakenPrompt", { name: trimmedName }) ||
+              `The name "${trimmedName}" is already taken in this game. Please enter a different name:`
+          );
+          if (!newName || newName.trim() === "") {
+            alert(
+              t("nameRequiredError") || "Name is required to join the game."
+            );
+            localStorage.removeItem("playerName");
+            localStorage.removeItem("gameCode");
+            window.location.href = "index.html";
+            return;
+          }
+
+          const finalName = newName.trim();
+          if (players[finalName]) {
+            alert(
+              t("nameTakenError") ||
+                "This name is also taken. Please try again with a different name."
+            );
+            localStorage.removeItem("playerName");
+            localStorage.removeItem("gameCode");
+            window.location.href = "index.html";
+            return;
+          }
+
+          trimmedName = finalName;
+        }
+
+        if (Object.keys(players).length >= maxPlayers) {
+          alert(t("gameFullError") || `This game is full with ${maxPlayers} players.`);
+          localStorage.removeItem("playerName");
+          localStorage.removeItem("gameCode");
+          window.location.href = "index.html";
+          return;
+        }
+
+        const result = await database.ref("games/" + accessCode).transaction((gameData) => {
+          if (gameData) {
+            gameData.players = gameData.players || {};
+            gameData.players[trimmedName] = true;
+            gameData.playerOrder = gameData.playerOrder || [];
+            if (!gameData.playerOrder.includes(trimmedName)) {
+              gameData.playerOrder.push(trimmedName);
+            }
+            return gameData;
+          }
+        });
+
+        if (result.committed) {
+          localStorage.setItem("playerName", trimmedName);
+          initializeLobby(trimmedName);
+        } else {
+          alert(t("joinGameError") || "Failed to join game.");
+          localStorage.removeItem("playerName");
+          localStorage.removeItem("gameCode");
+          window.location.href = "index.html";
+        }
+      }
+
+      function initializeLobby(name) {
+        savedPlayerName = name;
+
+        gameRef
+          .child("host")
+          .once("value")
+          .then((snapshot) => {
+            hostName = snapshot.val() || "";
+            if (!hostName) {
+              console.error("Host name not found in Firebase.");
+              alert(t("hostNotFoundError") || "Error: Host not found.");
+              localStorage.removeItem("playerName");
+              localStorage.removeItem("gameCode");
+              window.location.href = "index.html";
+              return;
+            }
+
+            if (savedPlayerName === hostName) {
+              document.getElementById("hostSettingsHR").style.display = "block";
+              document.getElementById("hostSettingsLabel").style.display =
+                "block";
+              questionLimitSelect.style.display = "block";
+              startGameBtn.style.display = "inline-block";
+
+              gameRef
+                .child("questionLimit")
+                .once("value")
+                .then((limitSnap) => {
+                  const limit = limitSnap.exists() ? limitSnap.val() : 5;
+                  questionLimitSelect.value = limit;
+                  gameRef.update({ questionLimit: parseInt(limit) });
+                  updateLocalizedUI();
+                });
+
+              questionLimitSelect.addEventListener("change", () => {
+                const selectedLimit = parseInt(questionLimitSelect.value);
+                gameRef.update({ questionLimit: selectedLimit });
+                updateLocalizedUI();
+              });
+            }
+
+            function renderPlayers() {
+              playersContainer.innerHTML = "";
+              const playerNames = Object.keys(allPlayers);
+              const orderedPlayers = [];
+
+              if (playerNames.includes(savedPlayerName))
+                orderedPlayers.push(savedPlayerName);
+              playerNames.forEach((name) => {
+                if (name !== savedPlayerName) orderedPlayers.push(name);
+              });
+
+              const isHost = savedPlayerName === hostName;
+
+              orderedPlayers.forEach((player) => {
+                const playerBox = document.createElement("div");
+                playerBox.className = "player-box my-1 mx-auto";
+                playerBox.style.display = "flex";
+                playerBox.style.alignItems = "center";
+
+                const playerNameSpan = document.createElement("span");
+                playerNameSpan.textContent = player;
+                playerBox.appendChild(playerNameSpan);
+
+                if (player === hostName) {
+                  playerNameSpan.innerHTML += ' <span class="crown">👑</span>';
+                }
+
+                if (readyPlayers[player]) {
+                  playerBox.className += " ready";
+                  playerNameSpan.innerHTML += " ✅";
+                }
+
+                if (isHost && player !== hostName) {
+                  const removeBtn = document.createElement("span");
+                  removeBtn.className = "remove-player-btn";
+                  removeBtn.textContent = "✖";
+                  removeBtn.title =
+                    t("removePlayerTitle", { player: player }) ||
+                    `Remove ${player}`;
+                  removeBtn.addEventListener("click", () => {
+                    if (
+                      confirm(
+                        t("confirmRemove", { player: player }) ||
+                          `Are you sure you want to remove ${player}?`
+                      )
+                    ) {
+                      database
+                        .ref(`games/${accessCode}/players/${player}`)
+                        .remove()
+                        .then(() => {
+                          database
+                            .ref(`games/${accessCode}/playersReady/${player}`)
+                            .remove()
+                            .catch((err) =>
+                              console.error(
+                                "Error removing from playersReady:",
+                                err
+                              )
+                            );
+                          // Remove from playerOrder
+                          database
+                            .ref(`games/${accessCode}/playerOrder`)
+                            .transaction((order) => {
+                              if (order) {
+                                return order.filter((p) => p !== player);
+                              }
+                              return order;
+                            });
+                        })
+                        .catch((err) =>
+                          console.error("Error removing player:", err)
+                        );
+                    }
+                  });
+                  playerBox.appendChild(removeBtn);
+                }
+
+                playersContainer.appendChild(playerBox);
+              });
+
+              if (isHost) {
+                const totalCount = Object.keys(allPlayers).length;
+                startGameBtn.disabled = totalCount < 2;
+                startGameBtn.title =
+                  totalCount < 2
+                    ? t("needMorePlayers") ||
+                      "At least 2 players are required to start the game."
+                    : t("startGame");
+              }
+            }
+
+            gameRef.child("players").on("value", (snapshot) => {
+              allPlayers = snapshot.val() || {};
+              renderPlayers();
+              updateLocalizedUI();
+            });
+
+            gameRef.child("players").on("child_removed", (snapshot) => {
+              const removedPlayer = snapshot.key;
+              if (removedPlayer === savedPlayerName) {
+                alert(
+                  t("playerRemoved") ||
+                    "You have been removed from the game by the host."
+                );
+                localStorage.removeItem("playerName");
+                localStorage.removeItem("gameCode");
+                window.location.href = "index.html";
+              }
+            });
+
+            gameRef.child("playersReady").on("value", (snapshot) => {
+              readyPlayers = snapshot.val() || {};
+              renderPlayers();
+              updateLocalizedUI();
+            });
+
+            gameRef.child("questionLimit").on("value", (snapshot) => {
+              const limit = snapshot.exists() ? snapshot.val() : 5;
+              questionLimitSelect.value = limit;
+              updateLocalizedUI();
+            });
+
+            gameRef.child("gameStarted").on("value", (snapshot) => {
+              if (snapshot.val() === true) {
+                window.location.href = `finalpage.html?code=${accessCode}`;
+              }
+            });
+
+            gameRef.child("playersReady").child(savedPlayerName).set(true);
+          })
+          .catch((err) => {
+            console.error("Error fetching host:", err);
+            alert(t("hostNotFoundError") || "Error accessing host data.");
+            localStorage.removeItem("playerName");
+            localStorage.removeItem("gameCode");
+            window.location.href = "index.html";
+          });
+      }
+
+      startGameBtn.addEventListener("click", async () => {
+        const totalCount = Object.keys(allPlayers).length;
+        if (totalCount >= 2) {
+          await gameRef.update({ gameStarted: true });
+          window.location.href = `finalpage.html?code=${accessCode}`;
+        } else {
+          alert(
+            t("needMorePlayers") ||
+              "At least 2 players are required to start the game."
+          );
+        }
+      });
+
+      document.getElementById("copyBtn").addEventListener("click", () => {
+        const fullURL = `${window.location.origin}/nextpage.html?code=${accessCode}`;
+        navigator.clipboard
+          .writeText(fullURL)
+          .then(() => alert(t("urlCopied") || "Game URL copied to clipboard!"))
+          .catch(() =>
+            alert(
+              t("urlCopyFailed") ||
+                "Failed to copy URL. Please copy it manually."
+            )
+          );
+      });
+    </script>
+
+
+
+<button id="micBtn" style="
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 999;
+width: 60px;
+height: 60px;
+border-radius: 10px;
+background-color: #20BB58;
+color: white;
+border: 2px solid white;
+/* Sharp top-left shadow, no blur */
+box-shadow: -6px -6px 0 rgba(0,0,0,0.8);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+cursor: pointer;
+transition: all 0.2s ease;
+">
+<i id="micIcon" class="bi bi-mic-mute-fill"></i>
+</button>
+
+<button id="speakerBtn" style="
+position: fixed;
+bottom: 90px;
+right: 20px;
+z-index: 999;
+width: 60px;
+height: 60px;
+border-radius: 10px;
+background-color: #20BB58;
+color: white;
+border: 2px solid white;
+box-shadow: -6px -6px 0 rgba(0,0,0,0.8); /* sharp top-left shadow */
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+cursor: pointer;
+transition: all 0.2s ease;
+">
+<i id="speakerIcon" class="bi bi-volume-up-fill"></i>
+</button>
+
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+  // Create PeerJS connection
+  const peer = new Peer();
+  const roomId = localStorage.getItem("roomId"); 
+
+  peer.on("open", id => {
+    console.log("My Peer ID:", id);
+
+    const roomRef = firebase.database().ref("rooms/" + roomId + "/peers");
+    roomRef.child(id).set(true);
+
+    peer.on("disconnected", () => {
+      roomRef.child(id).remove();
+    });
+
+    // Save my peerId so finalpage.html can reuse it
+    localStorage.setItem("myPeerId", id);
+  });
+</script>
+<script src="voiceChat.js"></script>
+  </body>
+</html>
